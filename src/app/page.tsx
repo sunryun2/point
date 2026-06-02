@@ -136,7 +136,7 @@ export default function Home() {
         
         {/* Header */}
         <div className="text-center pt-8">
-          <h1 className="text-5xl md:text-7xl font-extrabold text-indigo-600 tracking-tight drop-shadow-sm">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight drop-shadow-sm" style={{ color: '#2E7D32' }}>
             포인트 UP !
           </h1>
         </div>
