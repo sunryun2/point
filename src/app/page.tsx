@@ -59,7 +59,8 @@ export default function Home() {
   const [pointInputs, setPointInputs] = useState<Record<string, number | "">>({});
   const [pointHistory, setPointHistory] = useState<Record<string, any>[]>([]);
 
-  const maxScore = stages[2]?.targetScore > 0 ? stages[2].targetScore : 1000;
+  const highestStudentScore = students.reduce((max, s) => Math.max(max, s.score), 0);
+  const maxScore = Math.max(100, Math.ceil((highestStudentScore === 0 ? 1 : highestStudentScore) / 100) * 100);
 
   // --- LOCAL STORAGE SYNC ---
   // Load groups when logged in
@@ -594,13 +595,13 @@ export default function Home() {
                       <div className="relative pt-6 pb-4 px-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner overflow-hidden">
                         {/* Stage Markers */}
                         <div className="absolute top-0 bottom-0 left-0 w-px bg-gray-300" style={{ left: '4px' }}></div>
-                        {stages[0].targetScore > 0 && <div className="absolute top-0 bottom-0 w-px bg-indigo-200 border-l border-dashed border-indigo-300" style={{ left: `calc(${Math.min((stages[0].targetScore / maxScore) * 100, 100)}% + 16px)` }}></div>}
-                        {stages[1].targetScore > 0 && <div className="absolute top-0 bottom-0 w-px bg-indigo-300 border-l border-dashed border-indigo-400" style={{ left: `calc(${Math.min((stages[1].targetScore / maxScore) * 100, 100)}% + 16px)` }}></div>}
-                        {stages[2].targetScore > 0 && <div className="absolute top-0 bottom-0 w-px bg-indigo-400 border-l border-dashed border-indigo-500" style={{ left: `calc(${Math.min((stages[2].targetScore / maxScore) * 100, 100)}% + 16px)` }}></div>}
+                        {stages[0].targetScore > 0 && <div className="absolute top-0 bottom-0 w-px bg-indigo-200 border-l border-dashed border-indigo-300" style={{ left: `calc(${(stages[0].targetScore / maxScore) * 100}% + 16px)` }}></div>}
+                        {stages[1].targetScore > 0 && <div className="absolute top-0 bottom-0 w-px bg-indigo-300 border-l border-dashed border-indigo-400" style={{ left: `calc(${(stages[1].targetScore / maxScore) * 100}% + 16px)` }}></div>}
+                        {stages[2].targetScore > 0 && <div className="absolute top-0 bottom-0 w-px bg-indigo-400 border-l border-dashed border-indigo-500" style={{ left: `calc(${(stages[2].targetScore / maxScore) * 100}% + 16px)` }}></div>}
                         
-                        {stages[0].targetScore > 0 && <div className="absolute -top-4 text-[10px] font-bold text-indigo-400 -translate-x-1/2 whitespace-nowrap" style={{ left: `calc(${Math.min((stages[0].targetScore / maxScore) * 100, 100)}% + 16px)` }}>1단계 ({stages[0].targetScore})</div>}
-                        {stages[1].targetScore > 0 && <div className="absolute -top-4 text-[10px] font-bold text-indigo-500 -translate-x-1/2 whitespace-nowrap" style={{ left: `calc(${Math.min((stages[1].targetScore / maxScore) * 100, 100)}% + 16px)` }}>2단계 ({stages[1].targetScore})</div>}
-                        {stages[2].targetScore > 0 && <div className="absolute -top-4 text-[10px] font-bold text-indigo-600 -translate-x-1/2 whitespace-nowrap" style={{ left: `calc(${Math.min((stages[2].targetScore / maxScore) * 100, 100)}% + 16px)` }}>3단계 ({stages[2].targetScore})</div>}
+                        {stages[0].targetScore > 0 && <div className="absolute -top-4 text-[10px] font-bold text-indigo-400 -translate-x-1/2 whitespace-nowrap" style={{ left: `calc(${(stages[0].targetScore / maxScore) * 100}% + 16px)` }}>1단계 ({stages[0].targetScore})</div>}
+                        {stages[1].targetScore > 0 && <div className="absolute -top-4 text-[10px] font-bold text-indigo-500 -translate-x-1/2 whitespace-nowrap" style={{ left: `calc(${(stages[1].targetScore / maxScore) * 100}% + 16px)` }}>2단계 ({stages[1].targetScore})</div>}
+                        {stages[2].targetScore > 0 && <div className="absolute -top-4 text-[10px] font-bold text-indigo-600 -translate-x-1/2 whitespace-nowrap" style={{ left: `calc(${(stages[2].targetScore / maxScore) * 100}% + 16px)` }}>3단계 ({stages[2].targetScore})</div>}
 
                         {/* Cars */}
                         <div className="space-y-12 mt-6">
