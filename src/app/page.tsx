@@ -27,12 +27,67 @@ export default function Home() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginId === "admin" && loginPw === "1234") {
-      setIsLoggedIn(true);
+    if (!loginId.trim() || !loginPw.trim()) {
+      alert("아이디와 비밀번호를 입력해주세요.");
+      return;
+    }
+
+    const accountsStr = localStorage.getItem("pointApp_accounts");
+    const accounts = accountsStr ? JSON.parse(accountsStr) : {};
+
+    if (accounts[loginId]) {
+      if (accounts[loginId] === loginPw) {
+        const savedDataStr = localStorage.getItem(`pointApp_data_${loginId}`);
+        if (savedDataStr) {
+          try {
+            const savedData = JSON.parse(savedDataStr);
+            if (savedData.stages) setStages(savedData.stages);
+            if (savedData.bonusRule) setBonusRule(savedData.bonusRule);
+            if (savedData.students) setStudents(savedData.students);
+            if (savedData.pointHistory) setPointHistory(savedData.pointHistory);
+          } catch (err) {
+            console.error(err);
+          }
+        } else {
+          setStages([{ description: "", timeLimit: "", targetScore: 100 }, { description: "", timeLimit: "", targetScore: 300 }, { description: "", timeLimit: "", targetScore: 600 }]);
+          setBonusRule({ description: "보너스", score: 10 });
+          setStudents([]);
+          setPointHistory([]);
+        }
+        setIsLoggedIn(true);
+      } else {
+        alert("비밀번호가 틀렸습니다.");
+      }
     } else {
-      alert("아이디 또는 비밀번호가 틀렸습니다. (힌트: admin / 1234)");
+      if (confirm(`'${loginId}' 클래스가 존재하지 않습니다. 새로운 클래스를 생성하시겠습니까?`)) {
+        accounts[loginId] = loginPw;
+        localStorage.setItem("pointApp_accounts", JSON.stringify(accounts));
+        setIsLoggedIn(true);
+        setStages([{ description: "", timeLimit: "", targetScore: 100 }, { description: "", timeLimit: "", targetScore: 300 }, { description: "", timeLimit: "", targetScore: 600 }]);
+        setBonusRule({ description: "보너스", score: 10 });
+        setStudents([]);
+        setPointHistory([]);
+      }
     }
   };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setLoginId("");
+    setLoginPw("");
+    setStudents([]);
+    setPointHistory([]);
+    setStages([{ description: "", timeLimit: "", targetScore: 100 }, { description: "", timeLimit: "", targetScore: 300 }, { description: "", timeLimit: "", targetScore: 600 }]);
+    setBonusRule({ description: "보너스", score: 10 });
+    setActiveTab(1);
+  };
+
+  useEffect(() => {
+    if (isLoggedIn && loginId) {
+      const dataToSave = { stages, bonusRule, students, pointHistory };
+      localStorage.setItem(`pointApp_data_${loginId}`, JSON.stringify(dataToSave));
+    }
+  }, [stages, bonusRule, students, pointHistory, isLoggedIn, loginId]);
 
   // Tabs: 1 = Rules, 2 = Game, 3 = Graph
   const [activeTab, setActiveTab] = useState(1);
@@ -158,29 +213,29 @@ export default function Home() {
           <div className="absolute top-8 right-0 z-10 w-48">
             {!isLoggedIn ? (
               <form onSubmit={handleLogin} className="flex flex-col space-y-2 bg-white p-4 rounded-xl shadow-md border border-gray-100 animate-in fade-in slide-in-from-top-2">
-                <div className="text-xs font-bold text-gray-500 mb-1">관리자 로그인</div>
+                <div className="text-xs font-bold text-gray-500 mb-1">클래스 로그인 / 생성</div>
                 <input 
                   type="text" 
-                  placeholder="아이디 (admin)" 
+                  placeholder="아이디 (예: 1반)" 
                   value={loginId} 
                   onChange={(e) => setLoginId(e.target.value)}
                   className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 w-full"
                 />
                 <input 
                   type="password" 
-                  placeholder="비밀번호 (1234)" 
+                  placeholder="비밀번호" 
                   value={loginPw} 
                   onChange={(e) => setLoginPw(e.target.value)}
                   className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 w-full"
                 />
                 <button type="submit" className="bg-indigo-600 text-white text-sm font-bold py-1.5 rounded-lg hover:bg-indigo-700 transition-colors w-full mt-1">
-                  로그인
+                  접속하기
                 </button>
               </form>
             ) : (
               <div className="flex flex-col items-center space-y-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-top-2">
-                <div className="text-sm font-bold text-gray-700">{loginId}님 환영합니다!</div>
-                <button onClick={() => {setIsLoggedIn(false); setLoginId(""); setLoginPw("");}} className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-colors w-full">
+                <div className="text-sm font-bold text-gray-700">{loginId} 클래스</div>
+                <button onClick={handleLogout} className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-colors w-full">
                   로그아웃
                 </button>
               </div>
@@ -488,10 +543,10 @@ export default function Home() {
               <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Settings className="w-12 h-12 text-gray-300" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-400">오른쪽 상단에서 로그인해주세요</h2>
-              <p className="text-gray-400 font-medium">관리자 전용 페이지입니다.</p>
+              <h2 className="text-2xl font-bold text-gray-400">오른쪽 상단에서 클래스에 접속해주세요</h2>
+              <p className="text-gray-400 font-medium">원하는 아이디와 비밀번호를 입력하면 새로운 클래스가 생성됩니다.</p>
               <div className="inline-block bg-indigo-50 text-indigo-500 text-sm font-bold px-4 py-2 rounded-xl border border-indigo-100">
-                힌트: admin / 1234
+                아이디(클래스)별로 학생 목록과 점수가 따로 저장됩니다.
               </div>
             </div>
           </div>
