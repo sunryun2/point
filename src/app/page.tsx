@@ -20,6 +20,20 @@ type StageRule = {
 const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#6366f1', '#a855f7', '#ec4899'];
 
 export default function Home() {
+  // Login State
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginId, setLoginId] = useState("");
+  const [loginPw, setLoginPw] = useState("");
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginId === "admin" && loginPw === "1234") {
+      setIsLoggedIn(true);
+    } else {
+      alert("아이디 또는 비밀번호가 틀렸습니다. (힌트: admin / 1234)");
+    }
+  };
+
   // Tabs: 1 = Rules, 2 = Game, 3 = Graph
   const [activeTab, setActiveTab] = useState(1);
   
@@ -135,15 +149,51 @@ export default function Home() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="text-center pt-8">
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight drop-shadow-sm" style={{ color: '#2E7D32' }}>
-            포인트 UP !
-          </h1>
+        <div className="relative pt-8 pb-4">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight drop-shadow-sm" style={{ color: '#2E7D32' }}>
+              포인트 UP !
+            </h1>
+          </div>
+          <div className="absolute top-8 right-0 z-10 w-48">
+            {!isLoggedIn ? (
+              <form onSubmit={handleLogin} className="flex flex-col space-y-2 bg-white p-4 rounded-xl shadow-md border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                <div className="text-xs font-bold text-gray-500 mb-1">관리자 로그인</div>
+                <input 
+                  type="text" 
+                  placeholder="아이디 (admin)" 
+                  value={loginId} 
+                  onChange={(e) => setLoginId(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 w-full"
+                />
+                <input 
+                  type="password" 
+                  placeholder="비밀번호 (1234)" 
+                  value={loginPw} 
+                  onChange={(e) => setLoginPw(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 w-full"
+                />
+                <button type="submit" className="bg-indigo-600 text-white text-sm font-bold py-1.5 rounded-lg hover:bg-indigo-700 transition-colors w-full mt-1">
+                  로그인
+                </button>
+              </form>
+            ) : (
+              <div className="flex flex-col items-center space-y-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                <div className="text-sm font-bold text-gray-700">{loginId}님 환영합니다!</div>
+                <button onClick={() => {setIsLoggedIn(false); setLoginId(""); setLoginPw("");}} className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-colors w-full">
+                  로그아웃
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex justify-center space-x-4">
-          <button 
+        {/* Main Interface */}
+        {isLoggedIn ? (
+          <div className="space-y-8 animate-in fade-in duration-700">
+            {/* Tabs */}
+            <div className="flex justify-center space-x-4">
+              <button 
             onClick={() => setActiveTab(1)}
             className={`px-8 py-3 rounded-full font-bold text-xl transition-all flex items-center space-x-2 ${activeTab === 1 ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'bg-white text-gray-500 hover:bg-gray-100'}`}
           >
@@ -430,7 +480,22 @@ export default function Home() {
               </div>
             </div>
           )}
-        </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-xl p-8 min-h-[400px] flex items-center justify-center animate-in fade-in duration-500 mt-12">
+            <div className="text-center space-y-6">
+              <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Settings className="w-12 h-12 text-gray-300" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-400">오른쪽 상단에서 로그인해주세요</h2>
+              <p className="text-gray-400 font-medium">관리자 전용 페이지입니다.</p>
+              <div className="inline-block bg-indigo-50 text-indigo-500 text-sm font-bold px-4 py-2 rounded-xl border border-indigo-100">
+                힌트: admin / 1234
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
