@@ -314,11 +314,18 @@ export default function Home() {
   
   if (!isLoggedIn) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-sans text-gray-900">
-        <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
+      <main className="min-h-screen flex items-center justify-center p-6 font-sans text-gray-900 relative overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+        {/* Decorative background shapes */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-white opacity-20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white opacity-20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+        <div className="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-indigo-400 opacity-20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        
+        <div className="relative z-10 bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-extrabold tracking-tight drop-shadow-sm text-green-700 mb-2">포인트 UP</h1>
-            <p className="text-gray-500 font-medium">{isRegistering ? "새로운 계정을 만들어보세요!" : "선생님 계정으로 로그인해주세요."}</p>
+            <h1 className="text-5xl font-black tracking-tight drop-shadow-sm text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-3">포인트 UP</h1>
+            <p className="text-gray-500 font-bold">
+              {isRegistering ? "새로운 계정을 만들어보세요!" : "환영합니다! 로그인해주세요."}
+            </p>
           </div>
 
           <form onSubmit={handleAuth} className="space-y-4">
