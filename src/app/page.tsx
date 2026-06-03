@@ -44,6 +44,10 @@ export default function Home() {
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isFindingAccount, setIsFindingAccount] = useState(false);
+  const [findName, setFindName] = useState("");
+  const [findPhone, setFindPhone] = useState("");
+  const [foundAccount, setFoundAccount] = useState<{id: string, pw: string} | null>(null);
 
   // --- DASHBOARD STATE ---
   const [groups, setGroups] = useState<Group[]>([]);
@@ -162,6 +166,37 @@ export default function Home() {
       } else {
         alert("아이디 또는 비밀번호가 틀렸습니다.");
       }
+    }
+  };
+
+  const handleFindAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!findName.trim() || !findPhone.trim()) {
+      alert("이름과 전화번호를 모두 입력해주세요.");
+      return;
+    }
+
+    const accountsStr = localStorage.getItem("pointApp_accounts");
+    const accounts = accountsStr ? JSON.parse(accountsStr) : {};
+
+    let foundId = null;
+    let foundPw = null;
+
+    for (const [id, account] of Object.entries(accounts)) {
+      if (typeof account === 'object' && account !== null) {
+        if ((account as any).name === findName && (account as any).phone === findPhone) {
+          foundId = id;
+          foundPw = (account as any).password;
+          break;
+        }
+      }
+    }
+
+    if (foundId) {
+      setFoundAccount({ id: foundId, pw: foundPw });
+    } else {
+      alert("일치하는 계정 정보를 찾을 수 없습니다.");
+      setFoundAccount(null);
     }
   };
 
@@ -321,71 +356,146 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-indigo-400 opacity-20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         
         <div className="relative z-10 bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/20 w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-black tracking-tight drop-shadow-sm text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-3">포인트 UP</h1>
-            <p className="text-gray-500 font-bold">
-              {isRegistering ? "새로운 계정을 만들어보세요!" : "환영합니다! 로그인해주세요."}
-            </p>
-          </div>
+          {isFindingAccount ? (
+            <>
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-black text-gray-800 mb-2">계정 찾기</h2>
+                <p className="text-gray-500 font-bold">가입 시 등록한 이름과 전화번호를 입력하세요.</p>
+              </div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
-            {isRegistering && (
-              <>
+              {foundAccount ? (
+                <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 text-center space-y-4 mb-6">
+                  <p className="text-gray-600 font-bold">회원님의 계정 정보입니다.</p>
+                  <div className="text-lg bg-white p-4 rounded-xl border border-indigo-100">
+                    <p className="mb-2">아이디: <span className="font-black text-indigo-700">{foundAccount.id}</span></p>
+                    <p>비밀번호: <span className="font-black text-indigo-700">{foundAccount.pw}</span></p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setIsFindingAccount(false);
+                      setFoundAccount(null);
+                      setLoginId(foundAccount.id);
+                      setLoginPw(foundAccount.pw);
+                    }}
+                    className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors"
+                  >
+                    이 정보로 로그인하기
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleFindAccount} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">이름</label>
+                    <input 
+                      type="text" 
+                      value={findName} 
+                      onChange={(e) => setFindName(e.target.value)}
+                      placeholder="이름 입력"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">전화번호</label>
+                    <input 
+                      type="tel" 
+                      value={findPhone} 
+                      onChange={(e) => setFindPhone(e.target.value)}
+                      placeholder="예: 010-1234-5678"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-md mt-4">
+                    계정 찾기
+                  </button>
+                </form>
+              )}
+
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={() => { setIsFindingAccount(false); setFoundAccount(null); }} 
+                  className="text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  뒤로 가기
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <h1 className="text-5xl font-black tracking-tight drop-shadow-sm text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-3">포인트 UP</h1>
+                <p className="text-gray-500 font-bold">
+                  {isRegistering ? "새로운 계정을 만들어보세요!" : "환영합니다! 로그인해주세요."}
+                </p>
+              </div>
+
+              <form onSubmit={handleAuth} className="space-y-4">
+                {isRegistering && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">이름</label>
+                      <input 
+                        type="text" 
+                        value={regName} 
+                        onChange={(e) => setRegName(e.target.value)}
+                        placeholder="이름 입력"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">전화번호</label>
+                      <input 
+                        type="tel" 
+                        value={regPhone} 
+                        onChange={(e) => setRegPhone(e.target.value)}
+                        placeholder="전화번호 입력 (예: 010-1234-5678)"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
+                      />
+                    </div>
+                  </>
+                )}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">이름</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">아이디</label>
                   <input 
                     type="text" 
-                    value={regName} 
-                    onChange={(e) => setRegName(e.target.value)}
-                    placeholder="이름 입력"
+                    value={loginId} 
+                    onChange={(e) => setLoginId(e.target.value)}
+                    placeholder="아이디 입력"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">전화번호</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">비밀번호</label>
                   <input 
-                    type="tel" 
-                    value={regPhone} 
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    placeholder="전화번호 입력 (예: 010-1234-5678)"
+                    type="password" 
+                    value={loginPw} 
+                    onChange={(e) => setLoginPw(e.target.value)}
+                    placeholder="비밀번호 입력"
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
                   />
                 </div>
-              </>
-            )}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">아이디</label>
-              <input 
-                type="text" 
-                value={loginId} 
-                onChange={(e) => setLoginId(e.target.value)}
-                placeholder="아이디 입력"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">비밀번호</label>
-              <input 
-                type="password" 
-                value={loginPw} 
-                onChange={(e) => setLoginPw(e.target.value)}
-                placeholder="비밀번호 입력"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
-              />
-            </div>
-            <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-md mt-4">
-              {isRegistering ? "회원가입 완료" : "로그인"}
-            </button>
-          </form>
+                <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-md mt-4">
+                  {isRegistering ? "회원가입 완료" : "로그인"}
+                </button>
+              </form>
 
-          <div className="mt-6 text-center">
-            <button 
-              onClick={() => setIsRegistering(!isRegistering)} 
-              className="text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
-            >
-              {isRegistering ? "이미 계정이 있으신가요? 로그인하기" : "계정이 없으신가요? 회원가입하기"}
-            </button>
-          </div>
+              <div className="mt-6 text-center space-y-3">
+                <button 
+                  onClick={() => setIsRegistering(!isRegistering)} 
+                  className="block w-full text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
+                >
+                  {isRegistering ? "이미 계정이 있으신가요? 로그인하기" : "계정이 없으신가요? 회원가입하기"}
+                </button>
+                {!isRegistering && (
+                  <button 
+                    onClick={() => setIsFindingAccount(true)} 
+                    className="block w-full text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    아이디/비밀번호 찾기
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </main>
     );
@@ -457,8 +567,14 @@ export default function Home() {
 
   const activeGroup = groups.find(g => g.id === selectedGroupId);
 
+  const bgColors: Record<number, string> = {
+    1: "bg-[#f0f9ff] bg-[radial-gradient(#bae6fd_2px,transparent_2px)] [background-size:24px_24px]", // Sky blue dotted
+    2: "bg-[#f0fdf4] bg-[radial-gradient(#bbf7d0_2px,transparent_2px)] [background-size:24px_24px]", // Green dotted
+    3: "bg-[#faf5ff] bg-[radial-gradient(#e9d5ff_2px,transparent_2px)] [background-size:24px_24px]"  // Purple dotted
+  };
+
   return (
-    <main className="min-h-screen bg-gray-50 p-6 font-sans text-gray-900">
+    <main className={`min-h-screen p-6 font-sans text-gray-900 transition-all duration-500 ${bgColors[activeTab] || bgColors[1]}`}>
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Header */}
@@ -607,14 +723,7 @@ export default function Home() {
                     </button>
                   </div>
 
-                  <button 
-                    onClick={handleReset}
-                    className="flex items-center space-x-2 px-4 py-3 rounded-xl hover:bg-red-50 text-red-500 transition-colors border border-red-100 bg-white"
-                    title="모든 점수 초기화"
-                  >
-                    <RefreshCcw className="w-4 h-4" />
-                    <span className="font-bold text-sm">초기화</span>
-                  </button>
+
                 </div>
 
                 {/* Student Controls & Visual Car Track */}
