@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Car, Trophy, RefreshCcw, UserPlus, X, Star, Settings, ArrowLeft, Folder, Plus } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
+import { Car, Trophy, RefreshCcw, UserPlus, X, Star, Settings, ArrowLeft, Folder, Plus, Download } from "lucide-react";
 
 type Student = {
   id: string;
@@ -281,6 +281,33 @@ export default function Home() {
       newStages[index] = { ...newStages[index], [field]: value };
       return newStages;
     });
+  };
+
+  const handleExportCSV = () => {
+    if (pointHistory.length === 0) return;
+    
+    // Header
+    const headers = ["날짜", ...students.map(s => s.name)];
+    let csvContent = headers.join(",") + "\n";
+    
+    // Rows
+    pointHistory.forEach(entry => {
+      const row = [entry.date];
+      students.forEach(s => {
+        row.push(entry[s.name] ?? 0);
+      });
+      csvContent += row.join(",") + "\n";
+    });
+    
+    // Create Blob and download link (with BOM for UTF-8 Excel support)
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${activeGroup?.name || '그룹'}_점수기록.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // --- RENDER VIEWS ---
@@ -690,8 +717,17 @@ export default function Home() {
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-800">일자별 누적 점수 그래프</h2>
-                  <div className="text-sm font-bold bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg">
-                    날짜별 최종 기록
+                  <div className="flex space-x-3">
+                    <button 
+                      onClick={handleExportCSV}
+                      className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors font-bold text-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>엑셀(CSV) 다운로드</span>
+                    </button>
+                    <div className="text-sm font-bold bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg flex items-center">
+                      날짜별 최종 기록
+                    </div>
                   </div>
                 </div>
                 
@@ -718,13 +754,15 @@ export default function Home() {
                             key={student.id}
                             type="monotone" 
                             dataKey={student.name} 
-                            name={student.name}
+                            name={`${student.name} (총 ${student.score}점)`}
                             stroke={student.color} 
                             strokeWidth={3} 
                             dot={{ fill: student.color, strokeWidth: 2, r: 4, stroke: 'white' }}
                             activeDot={{ r: 6, stroke: 'white', strokeWidth: 2 }}
                             animationDuration={1000}
-                          />
+                          >
+                            <LabelList dataKey={student.name} position="top" style={{ fontSize: '12px', fill: student.color, fontWeight: 'bold' }} />
+                          </Line>
                         ))}
                       </LineChart>
                     </ResponsiveContainer>
