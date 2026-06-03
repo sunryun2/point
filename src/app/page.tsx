@@ -110,7 +110,8 @@ export default function Home() {
         setActiveTab(1);
       }
     }
-  }, [selectedGroupId, groups]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGroupId]);
 
   // --- AUTH HANDLERS ---
   const handleAuth = (e: React.FormEvent) => {
