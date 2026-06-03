@@ -733,9 +733,9 @@ export default function Home() {
                       학생을 추가하면 자동차가 나타납니다!
                     </div>
                   ) : (
-                    <div className="flex flex-col xl:flex-row gap-8 items-start">
+                    <div className="grid grid-cols-1 gap-8">
                       {/* Track Container */}
-                      <div className="w-full flex-1 relative pt-6 pb-4 px-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner overflow-hidden">
+                      <div className="relative pt-6 pb-4 px-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner overflow-hidden">
                         {/* Stage Markers */}
                         <div className="absolute top-0 bottom-0 left-0 w-px bg-gray-300" style={{ left: '4px' }}></div>
                         {stages[0].targetScore > 0 && <div className="absolute top-0 bottom-0 w-px bg-indigo-200 border-l border-dashed border-indigo-300" style={{ left: `calc(${(stages[0].targetScore / maxScore) * 100}% + 16px)` }}></div>}
@@ -774,11 +774,7 @@ export default function Home() {
                       </div>
 
                       {/* Student List & Controls */}
-                      <div className="w-full xl:w-[400px] flex-shrink-0 bg-gray-50/50 p-5 rounded-3xl border border-gray-100">
-                        <div className="flex justify-between items-center mb-4 px-2">
-                          <h3 className="text-gray-800 font-black text-lg">점수 입력</h3>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {students.map(student => {
                           const currentStage = student.score >= stages[1].targetScore ? 3 : student.score >= stages[0].targetScore ? 2 : 1;
                           return (
@@ -825,7 +821,6 @@ export default function Home() {
                             </div>
                           )
                         })}
-                        </div>
                       </div>
                     </div>
                   )}
