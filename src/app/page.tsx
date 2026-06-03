@@ -41,6 +41,8 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState("");
   const [loginId, setLoginId] = useState("");
   const [loginPw, setLoginPw] = useState("");
+  const [regName, setRegName] = useState("");
+  const [regPhone, setRegPhone] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
 
   // --- DASHBOARD STATE ---
@@ -113,9 +115,17 @@ export default function Home() {
   // --- AUTH HANDLERS ---
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginId.trim() || !loginPw.trim()) {
-      alert("아이디와 비밀번호를 입력해주세요.");
-      return;
+    
+    if (isRegistering) {
+      if (!regName.trim() || !regPhone.trim() || !loginId.trim() || !loginPw.trim()) {
+        alert("모든 정보(이름, 전화번호, 아이디, 비밀번호)를 입력해주세요.");
+        return;
+      }
+    } else {
+      if (!loginId.trim() || !loginPw.trim()) {
+        alert("아이디와 비밀번호를 입력해주세요.");
+        return;
+      }
     }
 
     const accountsStr = localStorage.getItem("pointApp_accounts");
@@ -126,16 +136,27 @@ export default function Home() {
         alert("이미 존재하는 아이디입니다.");
         return;
       }
-      accounts[loginId] = loginPw;
+      accounts[loginId] = {
+        password: loginPw,
+        name: regName,
+        phone: regPhone
+      };
       localStorage.setItem("pointApp_accounts", JSON.stringify(accounts));
       setCurrentUser(loginId);
       setIsLoggedIn(true);
       alert("회원가입이 완료되었습니다.");
     } else {
-      if (accounts[loginId] && accounts[loginId] === loginPw) {
-        setCurrentUser(loginId);
-        setIsLoggedIn(true);
-        setSelectedGroupId(null);
+      const account = accounts[loginId];
+      if (account) {
+        // Handle both old string format and new object format
+        const isPasswordCorrect = typeof account === 'string' ? account === loginPw : account.password === loginPw;
+        if (isPasswordCorrect) {
+          setCurrentUser(loginId);
+          setIsLoggedIn(true);
+          setSelectedGroupId(null);
+        } else {
+          alert("아이디 또는 비밀번호가 틀렸습니다.");
+        }
       } else {
         alert("아이디 또는 비밀번호가 틀렸습니다.");
       }
@@ -272,6 +293,30 @@ export default function Home() {
           </div>
 
           <form onSubmit={handleAuth} className="space-y-4">
+            {isRegistering && (
+              <>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">이름</label>
+                  <input 
+                    type="text" 
+                    value={regName} 
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="이름 입력"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">전화번호</label>
+                  <input 
+                    type="tel" 
+                    value={regPhone} 
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    placeholder="전화번호 입력 (예: 010-1234-5678)"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 outline-none transition-colors"
+                  />
+                </div>
+              </>
+            )}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">아이디</label>
               <input 
