@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 import { Car, Trophy, RefreshCcw, UserPlus, X, Star, Settings, ArrowLeft, Folder, Plus, Download } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 type Student = {
   id: string;
@@ -50,6 +51,7 @@ export default function Home() {
   const [foundAccount, setFoundAccount] = useState<{id: string, pw: string} | null>(null);
 
   // --- DASHBOARD STATE ---
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [newGroupName, setNewGroupName] = useState("");
@@ -66,30 +68,48 @@ export default function Home() {
   const highestStudentScore = students.reduce((max, s) => Math.max(max, s.score), 0);
   const maxScore = Math.max(100, Math.ceil((highestStudentScore === 0 ? 1 : highestStudentScore) / 100) * 100);
 
-  // --- LOCAL STORAGE SYNC ---
+  // --- SUPABASE SYNC ---
   // Load groups when logged in
   useEffect(() => {
-    if (isLoggedIn && currentUser) {
-      const savedDataStr = localStorage.getItem(`pointApp_data_${currentUser}`);
-      if (savedDataStr) {
-        try {
-          const savedData = JSON.parse(savedDataStr);
-          if (savedData.groups) setGroups(savedData.groups);
-        } catch (err) {
-          console.error(err);
+    async function loadData() {
+      if (isLoggedIn && currentUser) {
+        setIsDataLoaded(false);
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('data')
+          .eq('user_id', currentUser)
+          .single();
+
+        if (!error && data?.data?.groups) {
+          setGroups(data.data.groups);
+        } else {
+          setGroups([]);
         }
-      } else {
-        setGroups([]);
+        setIsDataLoaded(true);
       }
     }
+    loadData();
   }, [isLoggedIn, currentUser]);
 
   // Save groups whenever it changes
   useEffect(() => {
-    if (isLoggedIn && currentUser) {
-      localStorage.setItem(`pointApp_data_${currentUser}`, JSON.stringify({ groups }));
+    async function saveData() {
+      if (isLoggedIn && currentUser && isDataLoaded) {
+        await supabase
+          .from('user_profiles')
+          .upsert({ 
+            user_id: currentUser, 
+            data: { groups } 
+          }, { onConflict: 'user_id' });
+      }
     }
-  }, [groups, isLoggedIn, currentUser]);
+    
+    const timeoutId = setTimeout(() => {
+      saveData();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [groups, isLoggedIn, currentUser, isDataLoaded]);
 
   // Sync Active Group State -> Groups Array
   useEffect(() => {
