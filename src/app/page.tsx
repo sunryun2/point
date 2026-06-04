@@ -139,7 +139,7 @@ export default function Home() {
   }, [selectedGroupId]);
 
   // --- AUTH HANDLERS ---
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isRegistering) {
@@ -154,28 +154,57 @@ export default function Home() {
       }
     }
 
-    const accountsStr = localStorage.getItem("pointApp_accounts");
-    const accounts = accountsStr ? JSON.parse(accountsStr) : {};
+    try {
+      if (isRegistering) {
+        // Check existing user in Supabase
+        const { data: existingUser } = await supabase
+          .from('user_profiles')
+          .select('user_id')
+          .eq('user_id', loginId)
+          .single();
 
-    if (isRegistering) {
-      if (accounts[loginId]) {
-        alert("이미 존재하는 아이디입니다.");
-        return;
-      }
-      accounts[loginId] = {
-        password: loginPw,
-        name: regName,
-        phone: regPhone
-      };
-      localStorage.setItem("pointApp_accounts", JSON.stringify(accounts));
-      setCurrentUser(loginId);
-      setIsLoggedIn(true);
-      alert("회원가입이 완료되었습니다.");
-    } else {
-      const account = accounts[loginId];
-      if (account) {
-        // Handle both old string format and new object format
-        const isPasswordCorrect = typeof account === 'string' ? account === loginPw : account.password === loginPw;
+        if (existingUser) {
+          alert("이미 존재하는 아이디입니다.");
+          return;
+        }
+
+        const { error } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: loginId,
+            data: {
+              password: loginPw,
+              name: regName,
+              phone: regPhone,
+              groups: []
+            }
+          });
+
+        if (error) {
+          console.error(error);
+          alert("회원가입 중 오류가 발생했습니다.");
+          return;
+        }
+
+        setCurrentUser(loginId);
+        setIsLoggedIn(true);
+        alert("회원가입이 완료되었습니다.");
+      } else {
+        const { data: user, error } = await supabase
+          .from('user_profiles')
+          .select('data')
+          .eq('user_id', loginId)
+          .single();
+
+        if (error || !user || !user.data) {
+          alert("아이디 또는 비밀번호가 틀렸습니다.");
+          return;
+        }
+
+        const account = user.data;
+        // Check new format (object) or old format (if any legacy users somehow existed, but we just reset)
+        const isPasswordCorrect = account.password === loginPw;
+        
         if (isPasswordCorrect) {
           setCurrentUser(loginId);
           setIsLoggedIn(true);
@@ -183,40 +212,53 @@ export default function Home() {
         } else {
           alert("아이디 또는 비밀번호가 틀렸습니다.");
         }
-      } else {
-        alert("아이디 또는 비밀번호가 틀렸습니다.");
       }
+    } catch (err) {
+      console.error(err);
+      alert("로그인 처리 중 오류가 발생했습니다.");
     }
   };
 
-  const handleFindAccount = (e: React.FormEvent) => {
+  const handleFindAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!findName.trim() || !findPhone.trim()) {
       alert("이름과 전화번호를 모두 입력해주세요.");
       return;
     }
 
-    const accountsStr = localStorage.getItem("pointApp_accounts");
-    const accounts = accountsStr ? JSON.parse(accountsStr) : {};
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('user_id, data');
 
-    let foundId = null;
-    let foundPw = null;
+      if (error) {
+        console.error(error);
+        alert("계정 찾기 중 오류가 발생했습니다.");
+        return;
+      }
 
-    for (const [id, account] of Object.entries(accounts)) {
-      if (typeof account === 'object' && account !== null) {
-        if ((account as any).name === findName && (account as any).phone === findPhone) {
-          foundId = id;
-          foundPw = (account as any).password;
-          break;
+      let foundId = null;
+      let foundPw = null;
+
+      if (data) {
+        for (const row of data) {
+          if (row.data?.name === findName && row.data?.phone === findPhone) {
+            foundId = row.user_id;
+            foundPw = row.data.password;
+            break;
+          }
         }
       }
-    }
 
-    if (foundId) {
-      setFoundAccount({ id: foundId, pw: foundPw });
-    } else {
-      alert("일치하는 계정 정보를 찾을 수 없습니다.");
-      setFoundAccount(null);
+      if (foundId) {
+        setFoundAccount({ id: foundId, pw: foundPw });
+      } else {
+        alert("일치하는 계정 정보를 찾을 수 없습니다.");
+        setFoundAccount(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("계정 찾기 중 오류가 발생했습니다.");
     }
   };
 
