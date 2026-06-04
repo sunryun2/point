@@ -182,7 +182,7 @@ export default function Home() {
 
         if (error) {
           console.error(error);
-          alert("회원가입 중 오류가 발생했습니다.");
+          alert(`회원가입 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
           return;
         }
 
@@ -213,9 +213,9 @@ export default function Home() {
           alert("아이디 또는 비밀번호가 틀렸습니다.");
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("로그인 처리 중 오류가 발생했습니다.");
+      alert(`로그인 처리 중 오류가 발생했습니다: ${err.message || '알 수 없는 오류'}`);
     }
   };
 
@@ -233,7 +233,7 @@ export default function Home() {
 
       if (error) {
         console.error(error);
-        alert("계정 찾기 중 오류가 발생했습니다.");
+        alert(`계정 찾기 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`);
         return;
       }
 
@@ -256,9 +256,9 @@ export default function Home() {
         alert("일치하는 계정 정보를 찾을 수 없습니다.");
         setFoundAccount(null);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("계정 찾기 중 오류가 발생했습니다.");
+      alert(`계정 찾기 중 오류가 발생했습니다: ${err.message || '알 수 없는 오류'}`);
     }
   };
 
