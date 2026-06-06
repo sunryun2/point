@@ -52,6 +52,7 @@ export default function Home() {
 
   // --- DASHBOARD STATE ---
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [accountInfo, setAccountInfo] = useState<any>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [newGroupName, setNewGroupName] = useState("");
@@ -80,9 +81,12 @@ export default function Home() {
           .eq('user_id', currentUser)
           .single();
 
-        if (!error && data?.data?.groups) {
-          setGroups(data.data.groups);
+        if (!error && data?.data) {
+          const { groups, ...rest } = data.data;
+          setAccountInfo(rest);
+          setGroups(groups || []);
         } else {
+          setAccountInfo(null);
           setGroups([]);
         }
         setIsDataLoaded(true);
@@ -99,7 +103,7 @@ export default function Home() {
           .from('user_profiles')
           .upsert({ 
             user_id: currentUser, 
-            data: { groups } 
+            data: { ...(accountInfo || {}), groups } 
           }, { onConflict: 'user_id' });
       }
     }
